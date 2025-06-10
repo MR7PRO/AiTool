@@ -1,0 +1,58 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install buildozer
+        sudo apt-get update
+        sudo apt-get install -y git unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+        pip install cython==0.29.19 virtualenv
+    
+    - name: Build APK
+      run: |
+        echo "Creating buildozer.spec file..."
+        echo "[app]" > buildozer.spec
+        echo "title = ModernMultiTool" >> buildozer.spec
+        echo "package.name = modernmultitool" >> buildozer.spec
+        echo "package.domain = org.multitool" >> buildozer.spec
+        echo "source.dir = ." >> buildozer.spec
+        echo "source.include_exts = py,png,jpg,kv,atlas,txt" >> buildozer.spec
+        echo "version = 1.0" >> buildozer.spec
+        echo "requirements = python3,kivy==2.1.0,hostpython3" >> buildozer.spec
+        echo "orientation = portrait" >> buildozer.spec
+        echo "osx.python_version = 3" >> buildozer.spec
+        echo "osx.kivy_version = 2.1.0" >> buildozer.spec
+        echo "fullscreen = 0" >> buildozer.spec
+        echo "android.api = 30" >> buildozer.spec
+        echo "android.minapi = 21" >> buildozer.spec
+        echo "android.sdk = 24" >> buildozer.spec
+        echo "android.ndk = 23b" >> buildozer.spec
+        echo "android.ndk_path = /usr/local/lib/android/sdk/ndk/23.1.7779620" >> buildozer.spec
+        echo "android.arch = armeabi-v7a" >> buildozer.spec
+        
+        echo "Running buildozer..."
+        buildozer -v android debug
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v2
+      with:
+        name: ModernMultiTool-APK
+        path: bin/*.apk
